@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Data Science Fully Remote  Worldwide Jobs - Home</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .search-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+
+        .search-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .search-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .search-form input {
+            flex: 1;
+            padding: 12px 20px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .search-form input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .jobs-list {
+            list-style: none;
+        }
+
+        .job-card {
+            background: #fff;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+
+        .job-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.2);
+            transform: translateY(-3px);
+        }
+
+        .job-title {
+            color: #667eea;
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .job-company {
+            color: #666;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+        }
+
+        .job-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .job-detail {
+            padding: 8px 0;
+        }
+
+        .job-detail strong {
+            color: #333;
+            display: inline-block;
+            min-width: 80px;
+        }
+
+        .job-detail span {
+            color: #666;
+        }
+
+        .job-link {
+            display: inline-block;
+            margin-top: 10px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        .job-link:hover {
+            color: #764ba2;
+        }
+
+        .no-jobs {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+            font-size: 1.2em;
+        }
+
+        .add-job-section {
+            text-align: center;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-top: 30px;
+        }
+
+        .flash-messages {
+            margin-bottom: 20px;
+        }
+
+        .flash {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .flash-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .flash-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .flash-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div style="display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto;">
+                <div>
+                    <h1>🚀 Fully Remote  Worldwide Tech Jobs - Home</h1>
+                    <p>Find Your Dream Job Today</p>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    {% if is_admin %}
+                        <a href="{{ url_for('admin_dashboard') }}" class="btn" style="background: rgba(255,255,255,0.2); color: white;">
+                            📊 Dashboard
+                        </a>
+                        <a href="{{ url_for('logout') }}" class="btn" style="background: rgba(255,255,255,0.2); color: white;">
+                            🚪 Logout
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('login') }}" class="btn" style="background: rgba(255,255,255,0.2); color: white;">
+                            🔐 Admin Login
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="content">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-messages">
+                        {% for category, message in messages %}
+                            <div class="flash flash-{{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <div class="search-section">
+                <h2>🔍 Search Jobs</h2>
+                <form method="GET" action="{{ url_for('view_jobs') }}" class="search-form">
+                    <input type="text" name="q" placeholder="Search by position, company, or skills..." value="{{ query or '' }}">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </form>
+
+                <div class="action-buttons">
+                    {% if is_admin %}
+                        <a href="{{ url_for('add_job') }}" class="btn btn-secondary">➕ Add New Job</a>
+                        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-primary">📊 Manage All Jobs</a>
+                        <a href="{{ url_for('export_csv') }}" class="btn btn-primary">📥 Export as CSV</a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <h2 style="margin-bottom: 20px; color: #333;">
+                {% if query %}
+                    Search Results
+                {% else %}
+                    Latest Job Openings (Top 10)
+                {% endif %}
+            </h2>
+
+            <ul class="jobs-list">
+                {% for job in jobs %}
+                    <li class="job-card">
+                        <div class="job-title">{{ job['position'] }}</div>
+                        <div class="job-company">@ {{ job['company'] }}</div>
+                        
+                        <div class="job-details">
+                            <div class="job-detail">
+                                <strong>📍 Location:</strong> <span>{{ job['location'] }}</span>
+                            </div>
+                            <div class="job-detail">
+                                <strong>💰 Salary:</strong> <span>{{ job['salary'] }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="job-detail">
+                            <strong>🛠️ Skills:</strong> <span>{{ job['skills'] }}</span>
+                        </div>
+                        
+                        {% if job['link'] %}
+                            <a href="{{ job['link'] }}" target="_blank" class="job-link">🔗 Visit Company Website →</a>
+                        {% endif %}
+                    </li>
+                {% else %}
+                    <li class="no-jobs">
+                        <p>📭 No jobs found.</p>
+                        <p style="margin-top: 10px;">Be the first to add a job posting!</p>
+                    </li>
+                {% endfor %}
+            </ul>
+
+            {% if jobs %}
+                <div class="add-job-section">
+                    <p style="margin-bottom: 15px; color: #666;">Have a job opportunity to share?</p>
+                    <a href="{{ url_for('add_job') }}" class="btn btn-secondary">➕ Post a New Job</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
