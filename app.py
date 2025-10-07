@@ -248,6 +248,9 @@ def admin_dashboard():
     for idx, row in df.iterrows():
         job = row.to_dict()
         job['index'] = idx
+        # Convert Timestamp to string for template
+        if 'created_at' in job and pd.notna(job['created_at']):
+            job['created_at'] = str(job['created_at'])
         jobs.append(job)
     
     return render_template("admin_dashboard.html", jobs=jobs)
