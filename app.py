@@ -4,6 +4,7 @@ import io
 import os
 from datetime import datetime
 from dotenv import load_dotenv
+import re
 
 # Load environment variables from .env
 load_dotenv()
@@ -22,14 +23,20 @@ DATA_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')
 if not os.path.exists(DATA_FOLDER):
     os.makedirs(DATA_FOLDER)
 
-# Path to the joblisting.csv file
+# Path to the CSV files
 JOBLISTING_FILE = os.path.join(DATA_FOLDER, 'joblisting.csv')
+SUBSCRIBERS_FILE = os.path.join(DATA_FOLDER, 'subscribers.csv')
 
 def initialize_csv():
-    """Create joblisting.csv with headers if it doesn't exist"""
+    """Create CSV files with headers if they don't exist"""
     if not os.path.exists(JOBLISTING_FILE):
         df = pd.DataFrame(columns=["position", "company", "location", "skills", "salary", "link", "created_at"])
         df.to_csv(JOBLISTING_FILE, index=False)
+    
+    # Initialize subscribers CSV
+    if not os.path.exists(SUBSCRIBERS_FILE):
+        df = pd.DataFrame(columns=["email", "subscribed_at", "is_active"])
+        df.to_csv(SUBSCRIBERS_FILE, index=False)
 
 def load_jobs():
     """Load jobs from CSV file"""
@@ -61,6 +68,88 @@ def save_jobs(df):
         print(f"Error saving jobs: {str(e)}")
         return False
 
+def load_subscribers():
+    """Load subscribers from CSV file"""
+    try:
+        if os.path.exists(SUBSCRIBERS_FILE):
+            df = pd.read_csv(SUBSCRIBERS_FILE)
+            return df.fillna('')
+        else:
+            return pd.DataFrame(columns=["email", "subscribed_at", "is_active"])
+    except Exception as e:
+        print(f"Error loading subscribers: {str(e)}")
+        return pd.DataFrame(columns=["email", "subscribed_at", "is_active"])
+
+def save_subscribers(df):
+    """Save subscribers DataFrame to CSV file"""
+    try:
+        df.to_csv(SUBSCRIBERS_FILE, index=False)
+        return True
+    except Exception as e:
+        print(f"Error saving subscribers: {str(e)}")
+        return False
+
+def is_valid_email(email):
+    """Validate email format"""
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return re.match(pattern, email) is not None
+
+def add_subscriber(email):
+    """Add a new subscriber"""
+    df = load_subscribers()
+    
+    # Check if email already exists and is active
+    if not df.empty and email.lower() in df['email'].str.lower().values:
+        # Check if it's active or inactive
+        existing = df[df['email'].str.lower() == email.lower()]
+        if not existing.empty and existing.iloc[0]['is_active']:
+            return False, "This email is already subscribed!"
+        else:
+            # Reactivate the subscription
+            df.loc[df['email'].str.lower() == email.lower(), 'is_active'] = True
+            df.loc[df['email'].str.lower() == email.lower(), 'subscribed_at'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            return save_subscribers(df), "Successfully resubscribed to job notifications!"
+    
+    new_subscriber = {
+        "email": email.lower(),
+        "subscribed_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "is_active": True
+    }
+    
+    df = pd.concat([df, pd.DataFrame([new_subscriber])], ignore_index=True)
+    return save_subscribers(df), "Successfully subscribed to job notifications!"
+
+def get_active_subscribers():
+    """Get list of active subscriber emails"""
+    df = load_subscribers()
+    if df.empty:
+        return []
+    
+    active = df[df['is_active'] == True]['email'].tolist()
+    return active
+
+def notify_subscribers(job_data):
+    """
+    Notify subscribers about new job posting
+    This is a placeholder function - you'll need to implement actual email sending
+    using services like SendGrid, AWS SES, or SMTP
+    """
+    subscribers = get_active_subscribers()
+    
+    if not subscribers:
+        return
+    
+    # TODO: Implement email sending logic here
+    # Example with SendGrid or SMTP:
+    # for email in subscribers:
+    #     send_email(
+    #         to=email,
+    #         subject=f"New Job: {job_data['position']} at {job_data['company']}",
+    #         body=f"A new job has been posted:\n\nPosition: {job_data['position']}\nCompany: {job_data['company']}\nLocation: {job_data['location']}\n..."
+    #     )
+    
+    print(f"Would notify {len(subscribers)} subscribers about: {job_data['position']} at {job_data['company']}")
+
 # Home page - View Jobs (recently added first)
 @app.route("/")
 @app.route("/home")
@@ -68,6 +157,13 @@ def view_jobs():
     """Home page displaying up to 10 most recent jobs with search functionality"""
     df = load_jobs()
     query = request.args.get("q", "").strip()
+    
+    # Check for subscription success message
+    subscribed = request.args.get("subscribed", "")
+    if subscribed == "success":
+        flash("Thank you for subscribing! You'll receive email notifications for new jobs.", "success")
+    elif subscribed == "exists":
+        flash("This email is already subscribed!", "warning")
     
     if query and not df.empty:
         # Search in position, company, and skills columns (case-insensitive)
@@ -91,7 +187,11 @@ def view_jobs():
     # Check if user is logged in as admin
     is_admin = session.get('is_admin', False)
     
-    return render_template("jobs.html", jobs=jobs, query=query, is_admin=is_admin)
+    # Get total subscriber count
+    subscribers_df = load_subscribers()
+    subscriber_count = len(subscribers_df[subscribers_df['is_active'] == True]) if not subscribers_df.empty else 0
+    
+    return render_template("jobs.html", jobs=jobs, query=query, is_admin=is_admin, subscriber_count=subscriber_count)
 
 # Add job form
 @app.route("/add", methods=["GET", "POST"])
@@ -128,6 +228,8 @@ def add_job():
             
             # Save to CSV
             if save_jobs(df):
+                # Notify subscribers about the new job
+                notify_subscribers(new_job)
                 flash("Job successfully added!", "success")
                 return redirect(url_for('admin_dashboard'))
             else:
@@ -253,7 +355,107 @@ def admin_dashboard():
             job['created_at'] = str(job['created_at'])
         jobs.append(job)
     
-    return render_template("admin_dashboard.html", jobs=jobs)
+    # Get subscriber count
+    subscribers_df = load_subscribers()
+    subscriber_count = len(subscribers_df[subscribers_df['is_active'] == True]) if not subscribers_df.empty else 0
+    
+    return render_template("admin_dashboard.html", jobs=jobs, subscriber_count=subscriber_count)
+
+# Subscribe to job notifications
+@app.route("/subscribe", methods=["POST"])
+def subscribe():
+    """Subscribe to job notifications"""
+    email = request.form.get("email", "").strip().lower()
+    
+    # Validate email format
+    if not email or not is_valid_email(email):
+        flash("Please enter a valid email address!", "error")
+        return redirect(url_for('view_jobs'))
+    
+    success, message = add_subscriber(email)
+    
+    if success:
+        flash(message, "success")
+        return redirect(url_for('view_jobs', subscribed='success'))
+    else:
+        flash(message, "warning")
+        return redirect(url_for('view_jobs', subscribed='exists'))
+
+# Unsubscribe from notifications
+@app.route("/unsubscribe", methods=["GET", "POST"])
+def unsubscribe():
+    """Unsubscribe from job notifications"""
+    if request.method == "POST":
+        email = request.form.get("email", "").strip().lower()
+        
+        if not email or not is_valid_email(email):
+            flash("Please enter a valid email address!", "error")
+            return render_template("unsubscribe.html")
+        
+        df = load_subscribers()
+        
+        if df.empty or email not in df['email'].str.lower().values:
+            flash("Email address not found in subscribers list!", "error")
+            return render_template("unsubscribe.html")
+        
+        # Mark as inactive instead of deleting
+        df.loc[df['email'].str.lower() == email, 'is_active'] = False
+        
+        if save_subscribers(df):
+            flash("Successfully unsubscribed from job notifications!", "success")
+        else:
+            flash("Error unsubscribing. Please try again.", "error")
+        
+        return render_template("unsubscribe.html")
+    
+    return render_template("unsubscribe.html")
+
+# Admin view subscribers
+@app.route("/admin/subscribers")
+def view_subscribers():
+    """View all subscribers - Admin only"""
+    if not session.get('is_admin', False):
+        flash("You must be logged in as admin to view subscribers!", "error")
+        return redirect(url_for('login'))
+    
+    df = load_subscribers()
+    
+    # Sort by subscribed_at descending
+    if not df.empty and 'subscribed_at' in df.columns:
+        df = df.sort_values('subscribed_at', ascending=False, na_position='last')
+    
+    # Convert to list of dicts
+    subscribers = df.to_dict('records') if not df.empty else []
+    
+    # Count active subscribers
+    active_count = len(df[df['is_active'] == True]) if not df.empty else 0
+    
+    return render_template("subscribers.html", subscribers=subscribers, active_count=active_count)
+
+# Export subscribers to CSV
+@app.route("/admin/subscribers/export")
+def export_subscribers():
+    """Export subscribers to CSV - Admin only"""
+    if not session.get('is_admin', False):
+        flash("You must be logged in as admin to export subscribers!", "error")
+        return redirect(url_for('view_jobs'))
+    
+    df = load_subscribers()
+    
+    if df.empty:
+        flash("No subscribers to export!", "warning")
+        return redirect(url_for("view_subscribers"))
+    
+    # Convert DataFrame to CSV
+    output = io.StringIO()
+    df.to_csv(output, index=False)
+    response = Response(output.getvalue(), mimetype="text/csv")
+    
+    # Generate filename with timestamp
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    response.headers["Content-Disposition"] = f"attachment; filename=subscribers_export_{timestamp}.csv"
+    
+    return response
 
 # Error handlers
 @app.errorhandler(404)
@@ -267,7 +469,7 @@ def internal_error(error):
     return redirect(url_for('view_jobs'))
 
 if __name__ == "__main__":
-    # Initialize CSV file on startup
+    # Initialize CSV files on startup
     initialize_csv()
     # Set session lifetime to 7 days
     app.config['PERMANENT_SESSION_LIFETIME'] = 604800

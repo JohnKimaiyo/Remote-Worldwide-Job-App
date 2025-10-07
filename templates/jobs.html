@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> Data Science Fully Remote  Worldwide Jobs - Home</title>
+    <title>Data Science Fully Remote Worldwide Jobs - Home</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <style>
         * {
@@ -118,6 +118,74 @@
             display: flex;
             gap: 15px;
             margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        /* Subscription Section Styles */
+        .subscribe-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .subscribe-card {
+            text-align: center;
+            color: white;
+        }
+
+        .subscribe-card h3 {
+            font-size: 1.8em;
+            margin-bottom: 10px;
+        }
+
+        .subscribe-card > p {
+            margin-bottom: 20px;
+            opacity: 0.95;
+        }
+
+        .subscribe-form {
+            display: flex;
+            gap: 10px;
+            max-width: 500px;
+            margin: 0 auto 15px;
+        }
+
+        .subscribe-form input[type="email"] {
+            flex: 1;
+            padding: 12px 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            font-size: 1em;
+            background: rgba(255, 255, 255, 0.9);
+            transition: all 0.3s;
+        }
+
+        .subscribe-form input[type="email"]:focus {
+            outline: none;
+            background: white;
+            border-color: white;
+        }
+
+        .subscriber-count {
+            font-size: 0.9em;
+            margin-top: 15px;
+            opacity: 0.9;
+        }
+
+        .unsubscribe-link {
+            margin-top: 10px;
+            font-size: 0.85em;
+        }
+
+        .unsubscribe-link a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: underline;
+        }
+
+        .unsubscribe-link a:hover {
+            color: white;
         }
 
         .jobs-list {
@@ -228,6 +296,20 @@
             color: #856404;
             border: 1px solid #ffeaa7;
         }
+
+        @media (max-width: 600px) {
+            .subscribe-form {
+                flex-direction: column;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
@@ -235,7 +317,7 @@
         <div class="header">
             <div style="display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto;">
                 <div>
-                    <h1>🚀 Fully Remote  Worldwide Tech Jobs - Home</h1>
+                    <h1>🚀 Fully Remote Worldwide Tech Jobs</h1>
                     <p>Find Your Dream Job Today</p>
                 </div>
                 <div style="display: flex; gap: 10px;">
@@ -266,6 +348,28 @@
                 {% endif %}
             {% endwith %}
 
+            <!-- Email Subscription Section -->
+            <div class="subscribe-section">
+                <div class="subscribe-card">
+                    <h3>📧 Get Job Alerts</h3>
+                    <p>Subscribe to receive email notifications when new jobs are posted!</p>
+                    <form method="POST" action="{{ url_for('subscribe') }}" class="subscribe-form">
+                        <input type="email" name="email" placeholder="Enter your email address" required>
+                        <button type="submit" class="btn btn-secondary">Subscribe</button>
+                    </form>
+                    <p class="subscriber-count">
+                        {% if subscriber_count > 0 %}
+                            🎉 {{ subscriber_count }} job seekers already subscribed!
+                        {% else %}
+                            Be the first to subscribe!
+                        {% endif %}
+                    </p>
+                    <p class="unsubscribe-link">
+                        <a href="{{ url_for('unsubscribe') }}">Want to unsubscribe?</a>
+                    </p>
+                </div>
+            </div>
+
             <div class="search-section">
                 <h2>🔍 Search Jobs</h2>
                 <form method="GET" action="{{ url_for('view_jobs') }}" class="search-form">
@@ -273,13 +377,13 @@
                     <button type="submit" class="btn btn-primary">Search</button>
                 </form>
 
-                <div class="action-buttons">
-                    {% if is_admin %}
+                {% if is_admin %}
+                    <div class="action-buttons">
                         <a href="{{ url_for('add_job') }}" class="btn btn-secondary">➕ Add New Job</a>
                         <a href="{{ url_for('admin_dashboard') }}" class="btn btn-primary">📊 Manage All Jobs</a>
                         <a href="{{ url_for('export_csv') }}" class="btn btn-primary">📥 Export as CSV</a>
-                    {% endif %}
-                </div>
+                    </div>
+                {% endif %}
             </div>
 
             <h2 style="margin-bottom: 20px; color: #333;">
@@ -298,16 +402,18 @@
                         
                         <div class="job-details">
                             <div class="job-detail">
-                                <strong>📍 Location:</strong> <span>{{ job['location'] }}</span>
+                                <strong>📍 Location:</strong> <span>{{ job['location'] if job['location'] else 'Not specified' }}</span>
                             </div>
                             <div class="job-detail">
-                                <strong>💰 Salary:</strong> <span>{{ job['salary'] }}</span>
+                                <strong>💰 Salary:</strong> <span>{{ job['salary'] if job['salary'] else 'Not specified' }}</span>
                             </div>
                         </div>
                         
-                        <div class="job-detail">
-                            <strong>🛠️ Skills:</strong> <span>{{ job['skills'] }}</span>
-                        </div>
+                        {% if job['skills'] %}
+                            <div class="job-detail">
+                                <strong>🛠️ Skills:</strong> <span>{{ job['skills'] }}</span>
+                            </div>
+                        {% endif %}
                         
                         {% if job['link'] %}
                             <a href="{{ job['link'] }}" target="_blank" class="job-link">🔗 Visit Company Website →</a>
@@ -316,15 +422,19 @@
                 {% else %}
                     <li class="no-jobs">
                         <p>📭 No jobs found.</p>
-                        <p style="margin-top: 10px;">Be the first to add a job posting!</p>
+                        {% if query %}
+                            <p style="margin-top: 10px;">Try a different search term.</p>
+                        {% else %}
+                            <p style="margin-top: 10px;">Be the first to add a job posting!</p>
+                        {% endif %}
                     </li>
                 {% endfor %}
             </ul>
 
-            {% if jobs %}
+            {% if jobs and not is_admin %}
                 <div class="add-job-section">
                     <p style="margin-bottom: 15px; color: #666;">Have a job opportunity to share?</p>
-                    <a href="{{ url_for('add_job') }}" class="btn btn-secondary">➕ Post a New Job</a>
+                    <a href="{{ url_for('login') }}" class="btn btn-secondary">🔐 Login to Post a Job</a>
                 </div>
             {% endif %}
         </div>
